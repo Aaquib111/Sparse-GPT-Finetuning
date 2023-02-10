@@ -9,7 +9,7 @@ Bs is inverse of how often to make masks (e.g. when Bs is 4, make new masks with
 '''
 
 def calculate_mask(
-    W,
+    W_orig,
     H_inv,
     p,
     B,
