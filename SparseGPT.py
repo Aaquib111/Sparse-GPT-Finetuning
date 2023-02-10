@@ -24,12 +24,13 @@ generator = pipeline('text-generation', model="facebook/opt-125m")
 # Create calibration data
 calibration_data = []
 for i, data in enumerate(iter(dataset['train'])):
-    if i > 1:
+    if i > 7:
         break
-    tokenized = tokenizer.encode(data['text'], return_tensors="pt", padding="max_length", truncation=True, max_length=2048)
+    tokenized = tokenizer.encode(data['text'], return_tensors="pt", padding="max_length", truncation=True, max_length=512)
     calibration_data.append(tokenized)
+#calibration_data = torch.transpose(torch.squeeze(torch.stack(calibration_data)),0,1).to(device=device)
 calibration_data = torch.squeeze(torch.stack(calibration_data)).to(device=device)
-
+calibration_data.double()
 
 
 # First, put in forward hooks
@@ -50,33 +51,90 @@ def get_module_name(param_name):
         return None, None
 
 
-# make a dictionary to access module by name
-model_lookup_dict = {}
-for module_name, module_iter in model.named_modules():
-    model_lookup_dict[module_name] = module_iter
+# Re-load model with pre-trained head
+model = OPTForCausalLM.from_pretrained("facebook/opt-125m", output_attentions=True, output_hidden_states=True)
 
+# make a dictionary to access module by name
+module_lookup_dict = {}
+for module_name, module_iter in model.named_modules():
+    module_lookup_dict[module_name] = module_iter
 EPSILON = 1e-8
 SPARSENESS = .2
 B = 32
 Bs = 16
 
+layer_blacklist = ['model.decoder.embed_tokens.weight', 'model.decoder.embed_tokens.bias',
+'model.decoder.embed_positions.weight', 'model.decoder.final_layer_norm.weight',
+'model.decoder.final_layer_norm.bias']
+
 # Using calibration data (inputs to each intermediate weight layer)
 # Iterate through named parameters, calculate inverse hessian and calculate mask
+
+# without this
+param_lookup_dict = {}
+param_names = []
 for name, param in model.named_parameters():
-    module_name, param_type = get_module_name(name)
+    param_names.append(name)
+    param_lookup_dict[name] = param
 
-    # apply to weight and bias layers
-    if param_type == "weight" or param_type == "bias":
-        # input to parameter
-        layer_input = features[module_name]
-        # calculate inverse hessian
-        inv_hess = inverse_hessian(layer_input, epsilon=EPSILON)
+with torch.no_grad():
+    for name in param_names:
+        param = param_lookup_dict[name]
 
-        # calculate mask
-        mask = calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
+        # skip the embed layer
+        if name in layer_blacklist:
+            continue
         
-        # get module from lookup dictionary by module name
-        module = model_lookup_dict[module_name]
-        # apply mask
-        prune.custom_from_mask(module=module, name=param_type, mask=mask)
-    break
+        # skip norms which have 1 dimension
+        if len(param.shape) < 2:
+            continue
+
+        module_name, param_type = get_module_name(name)
+
+        # apply to weight and bias layers
+        if param_type == "weight" or param_type == "bias":
+            # input to parameter
+            layer_input = features[module_name][0]
+            print(name)
+            print(f"layer input shape: {layer_input.shape}")
+            # print(f"weight shape: {param.shape}")
+
+            # calculate inverse hessian
+            # check if input is flattened e.g. from 8,512,768 to 4096,768
+            if len(layer_input.shape) == 2:
+                inv_hess = inverse_hessian(torch.transpose(layer_input, 0, 1), epsilon=EPSILON, 
+                flattened=True)
+
+            else:
+                inv_hess = inverse_hessian(torch.transpose(layer_input, 1, 2), epsilon=EPSILON,
+                flattened=False)
+
+            # inv_hess = inverse_hessian(layer_input, epsilon=EPSILON)
+            # print(f"hessian shape: {inv_hess.shape}")
+
+            # calculate mask
+            mask = calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
+            
+            # get module from lookup dictionary by module name
+            module = module_lookup_dict[module_name]
+            # apply mask
+            prune.custom_from_mask(module=module, name=param_type, mask=mask)
+        # break
+
+test_param = model.get_decoder().layers[0].self_attn.k_proj.weight_orig
+# for name, test_param in model.named_parameters():
+#     param = param_lookup_dict[name]
+
+#     # skip the embed layer
+#     if name in layer_blacklist:
+#         continue
+    
+#     # skip norms which have 1 dimension
+#     if len(param.shape) < 2:
+#         continue
+
+#     print(torch.isnan(test_param).sum())
+# print(torch.max(test_param))
+print(torch.sum(test_param == 0.0))
+print(test_param)
+# print(test_param.shape)

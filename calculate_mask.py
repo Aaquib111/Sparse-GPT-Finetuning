@@ -9,7 +9,7 @@ Bs is inverse of how often to make masks (e.g. when Bs is 4, make new masks with
 '''
 
 def calculate_mask(
-    W_orig,
+    W,
     H_inv,
     p,
     B,
@@ -23,7 +23,7 @@ def calculate_mask(
     # Initialize the pruning mask M and block quantization errors E to all zeros
 
     M = torch.zeros(d_row, d_col, dtype=torch.bool)
-    E = torch.zeros(d_row, B)
+    E = torch.zeros(d_row, B, dtype=torch.float64)
 
     # only need to calculate w_square and h_square once
     # Loop over blocks of columns of W (as specified by B)
@@ -76,6 +76,9 @@ def calculate_mask(
 
         # Update all remaining weights
 
+        # print(f"this weight shape: {W[:, i + B:].shape}")
+        # print(f"e shape: {E.shape}")
+        # print(f"Hessian shape: {H_inv[i:i + B, i + B:].shape}")
         W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
 
     # return mask
