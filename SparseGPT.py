@@ -163,7 +163,7 @@ def inverse_hessian(X, epsilon=0.01, flattened=False):
     Returns:
     - torch.Tensor: inverted matrix
     """
-    X = X.double()
+    X = X.float()
     print(f"input shape: {X.shape}")
 
     if flattened:
