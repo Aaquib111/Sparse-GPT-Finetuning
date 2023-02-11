@@ -17,7 +17,6 @@ def calculate_mask(
     ):
 
     # Get the number of rows and columns in W
-
     (d_row, d_col) = W.shape
 
     # Initialize the pruning mask M and block quantization errors E to all zeros
@@ -31,15 +30,11 @@ def calculate_mask(
     for i in range(0, d_col, B):
 
         # Loop over columns within a block
-
-        for j in range(i, min(i + B, d_col)):
+        for j in range(i, min(i + B - 1, d_col)):
 
             # If j is a multiple of Bs, prune a portion of the weights
-
             if j % Bs == 0:
-
                 # Get the mask for the largest (1 - p)% of weights based on squared value and inverse hessian
-
                 # ASTERISK: prune_values is matrix of w^2/H^(-1)_cc
 
                 # Finding respective sections of hessian and weights matrix
@@ -48,12 +43,11 @@ def calculate_mask(
                         + Bs]).diag()  # 1 dimensional vector
 
                 # getting the prune values matrix from W and H^-1 sections
-                prune_values = w_square_section \
-                    / h_square_section.unsqueeze(0)
+                prune_values = w_square_section / h_square_section.unsqueeze(0)
 
-                #calulating cutoff for the weights
-                cutoff_value = torch.kthvalue(prune_values, int((1 - p)
-                        * d_row), dim=0)[0]
+                num_el_prune = int(p * prune_values.numel())
+
+                cutoff_value = torch.topk(prune_values.flatten(), num_el_prune, largest=True).values[-1]
 
                 #getting the final mask
                 mask = prune_values > cutoff_value
@@ -62,23 +56,16 @@ def calculate_mask(
                 M[:, j:j + Bs] = mask
 
             # Calculate the pruning error for this column
-
             E[:, j - i] = W[:, j] / H_inv[j, j]
 
             # Freeze the weights that are not pruned by multiplying by the pruning mask
             # Invert mask (~M equivalent to 1 - M < might be -(M + 1))
+            E[:, j - i] = (~M[:, j]) * E[:, j - i]
 
-            E[:, j - i] = ~M[:, j] * E[:, j - i]
-
-            # Update the weights in this block based on the pruning error and inverse hessian information
-
+            # also testing no weight update here too
             W[:, j:i + B] -= torch.ger(E[:, j - i], H_inv[j, j:i + B])
-
+            
         # Update all remaining weights
-
-        # print(f"this weight shape: {W[:, i + B:].shape}")
-        # print(f"e shape: {E.shape}")
-        # print(f"Hessian shape: {H_inv[i:i + B, i + B:].shape}")
         W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
 
     # return mask
