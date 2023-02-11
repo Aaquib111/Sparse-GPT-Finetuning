@@ -118,14 +118,24 @@ def calculate_mask(
 
             E[:, j - i] = (~M[:, j]) * E[:, j - i]
 
+
+            if torch.sum(E.isnan()) != 0:
+                H_inv_diag = H_inv.diag()
+                W_column = W[:, j]
+                print("E started getting nans")
+
             # Update the weights in this block based on the pruning error and inverse hessian information
             #print(torch.ger(E[:, j - i], H_inv[j, j:i + B]).shape)
             #print(torch.isnan(torch.ger(E[:, j - i], H_inv[j, j:i + B])).sum())
             # E[:, j - i] should be 768x1, H_inv[j, j:i + B] should be 1x(i+B-j)
+
+            # also testing no weight update here too
             W[:, j:i + B] -= torch.ger(E[:, j - i], H_inv[j, j:i + B])
-            print("weight update: ")
-            print("E:")
-            print(E[:, j - i])
+
+
+            # print("weight update: ")
+            # print(f"num nans in E: {torch.sum(E[:, j - i].isnan())}")
+            # print(E[:, j - i])
             # print("H:")
             # print(H_inv[j, j:i + B])
             # print("mult:")
@@ -136,7 +146,14 @@ def calculate_mask(
         # print(f"this weight shape: {W[:, i + B:].shape}")
         # print(f"e shape: {E.shape}")
         # print(f"Hessian shape: {H_inv[i:i + B, i + B:].shape}")
+
+
+        # FOR NOW DONT UPDATE REST OF WEIGHTS
+        # print(f"num nans in E: {torch.sum(E.isnan())}")
         W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
+
+
+
         # if torch.isnan(W).sum() > 0:
         #     print(i, j)
         #     print(E)
@@ -163,31 +180,30 @@ def inverse_hessian(X, epsilon=0.01, flattened=False):
     Returns:
     - torch.Tensor: inverted matrix
     """
-    X = X.float()
-    print(f"input shape: {X.shape}")
+    X = X.double()
+    print(f"hessian input shape: {X.shape}")
 
     if flattened:
         X_T = torch.transpose(X, 0, 1)
         identity = torch.eye(X.shape[0], dtype=torch.float64)
         # print(f"shape of x @ x_t: {torch.sum(X @ X_T, dim=0).shape}")
-        H = 2 * (X @ X_T + (epsilon * identity))
+        H = 2 * (X @ X_T) + (epsilon * identity)
     else:
         X_T = torch.transpose(X, 1, 2)
         identity = torch.eye(X.shape[1], dtype=torch.float64)
         # print(f"shape of x @ x_t: {torch.sum(X @ X_T, dim=0).shape}")
-        H = 2 * (torch.sum(X @ X_T, dim=0) + (epsilon * identity))
+        H = 2 * (torch.sum(X @ X_T, dim=0)) + (epsilon * identity)
     # print(torch.linalg.eig(H)[0])
     print(f"H SHAPE: {H.shape}")
     # print(f"num zeros in hessian: {torch.sum(H == 0)}")
     # print(f"Determinant is {torch.linalg.det(H)}")
     # print(f"Hessian Diagonal is {H.diag()}")
-    H_inv = torch.inverse(H)
     
-    # H_inv = torch.cholesky(H_inv).T
-    H_inv = torch.lu(H_inv)[0].T
-    
-    return H_inv
+    L = torch.linalg.cholesky(H, upper=True)
+    H_inv = torch.triangular_solve(L, identity, upper=True)[0]
+    H_inv = H_inv @ H_inv.t()
 
+    return H_inv
 
 # Re-load model with pre-trained head
 model = OPTForCausalLM.from_pretrained("facebook/opt-125m", output_attentions=True, output_hidden_states=True)
@@ -235,7 +251,7 @@ with torch.no_grad():
             layer_input = features[module_name][0]
             print(name)
             print(f"layer input shape: {layer_input.shape}")
-            # print(f"weight shape: {param.shape}")
+            print(f"weight shape: {param.shape}")
 
             # calculate inverse hessian
             # check if input is flattened e.g. from 8,512,768 to 4096,768
