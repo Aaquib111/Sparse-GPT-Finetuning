@@ -2,6 +2,7 @@ import torch
 from torch.nn.utils import prune
 
 from transformers import AutoTokenizer, OPTForCausalLM, pipeline
+from tqdm import tqdm
 from datasets import load_dataset
 
 from calculate_mask import calculate_mask
@@ -57,7 +58,7 @@ module_lookup_dict = {}
 for module_name, module_iter in model.named_modules():
     module_lookup_dict[module_name] = module_iter
 EPSILON = 1
-SPARSENESS = .2
+SPARSENESS = .3
 B = 32
 Bs = 16
 
@@ -92,7 +93,7 @@ with torch.no_grad():
         if param_type == "weight" or param_type == "bias":
             # input to parameter
             layer_input = features[module_name][0]
-            print(name)
+            #print(name)
 
             # calculate inverse hessian
             # check if input is flattened e.g. from 8,512,768 to 4096,768
