@@ -8,6 +8,7 @@ from datasets import load_dataset
 from calculate_mask import calculate_mask
 from inverse_hessian import inverse_hessian
 from input_prehooks import put_input_hooks
+from testing_module import calculate_perp
 
 
 #DEVICE
@@ -116,3 +117,5 @@ with torch.no_grad():
             # apply mask
             prune.custom_from_mask(module=module, name=param_type, mask=mask)
         # break
+
+print(calculate_perp(model, calibration_data, device))
