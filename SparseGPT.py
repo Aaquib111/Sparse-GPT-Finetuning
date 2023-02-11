@@ -37,6 +37,7 @@ calibration_data.double()
 features = {}
 put_input_hooks(model=model, features=features)
 
+# I drink for fun not to get rid of pain
 # Run calibration data through model at first to calculate features dictionary with
 # input tensors to each intermediate layer
 model(calibration_data)
@@ -57,6 +58,8 @@ def calculate_mask(
     B,
     Bs,
     ):
+
+    # Hi Aaquib
 
     # Get the number of rows and columns in W
     (d_row, d_col) = W.shape
@@ -85,19 +88,15 @@ def calculate_mask(
 
                 # Finding respective sections of hessian and weights matrix
                 w_square_section = torch.square(W[:, j:j + Bs])
-                h_square_section = torch.square(H_inv[j:j + Bs, j:j
-                        + Bs]).diag()  # 1 dimensional vector
+                h_square_section = torch.square(H_inv[j:j + Bs, j:j + Bs]).diag()  # 1 dimensional vector
 
                 # getting the prune values matrix from W and H^-1 sections
                 prune_values = w_square_section \
                     / h_square_section.unsqueeze(0)
 
                 #calulating cutoff for the weights
-                # cutoff_value = torch.kthvalue(prune_values, int((1 - p)
-                        # * d_row), dim=0)[0]
-                num_el_prune = int(p * prune_values.numel())
-
-                cutoff_value = torch.topk(prune_values.flatten(), num_el_prune, largest=True).values[-1]
+                cutoff_value = torch.kthvalue(prune_values, int((1 - p)
+                        * d_row), dim=0)[0]
 
                 #getting the final mask
                 mask = prune_values > cutoff_value
@@ -108,10 +107,11 @@ def calculate_mask(
             # Calculate the pruning error for this column
 
             E[:, j - i] = W[:, j] / H_inv[j, j]
-            # if torch.isnan(E[:, j-i]).sum() > 0:
-            #     print(E[:,j-i])
-            #     print(W[:5, j])
-            #     print(H_inv[j,j])
+            print(W[:, j])
+            if torch.isnan(E[:, j-i]).sum() > 0:
+                print(E[:,j-i])
+                print(W[:5, j])
+                print(H_inv[j,j])
 
             # Freeze the weights that are not pruned by multiplying by the pruning mask
             # Invert mask (~M equivalent to 1 - M < might be -(M + 1))
@@ -121,31 +121,31 @@ def calculate_mask(
             # Update the weights in this block based on the pruning error and inverse hessian information
             #print(torch.ger(E[:, j - i], H_inv[j, j:i + B]).shape)
             #print(torch.isnan(torch.ger(E[:, j - i], H_inv[j, j:i + B])).sum())
-            # E[:, j - i] should be 768x1, H_inv[j, j:i + B] should be 1x(i+B-j)
-            W[:, j:i + B] -= torch.ger(E[:, j - i], H_inv[j, j:i + B])
-            print("weight update: ")
-            print("E:")
-            print(E[:, j - i])
-            # print("H:")
-            # print(H_inv[j, j:i + B])
-            # print("mult:")
-            # print(torch.ger(E[:, j - i], H_inv[j, j:i + B]))
+            W[:, j:(i + B)] = W[:, j:(i + B)] - torch.ger(E[:,(j - i)], H_inv[j, j:(i + B)])
+
+            # Elite hacking
+
+            # More elite hacking
+
+            # Hacking x3
+
+            # hacking hacking hacking
 
         # Update all remaining weights
     
         # print(f"this weight shape: {W[:, i + B:].shape}")
         # print(f"e shape: {E.shape}")
         # print(f"Hessian shape: {H_inv[i:i + B, i + B:].shape}")
-        W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
-        # if torch.isnan(W).sum() > 0:
-        #     print(i, j)
-        #     print(E)
-        #     print(H_inv[i:i + B, i + B:])
-        #     print(torch.isnan(E).sum())
-        #     print(torch.isnan(H_inv[i:i + B, i + B:]).sum())
-        #     print(torch.matmul(E, H_inv[i:i + B, i + B:]).shape)
-        #     print(torch.isnan(torch.matmul(E, H_inv[i:i + B, i + B:])).sum())
-        #     print(torch.isnan(W).sum())
+        W[:, (i + B):] = W[:, (i + B):] - torch.matmul(E, H_inv[i:(i + B), (i + B):])
+        if torch.isnan(W).sum() > 0:
+            print(i, j)
+            print(E)
+            print(H_inv[i:i + B, i + B:])
+            print(torch.isnan(E).sum())
+            print(torch.isnan(H_inv[i:i + B, i + B:]).sum())
+            print(torch.matmul(E, H_inv[i:i + B, i + B:]).shape)
+            print(torch.isnan(torch.matmul(E, H_inv[i:i + B, i + B:])).sum())
+            print(torch.isnan(W).sum())
     
     print(torch.isnan(W).sum())
 
