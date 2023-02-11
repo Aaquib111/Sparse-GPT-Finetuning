@@ -99,15 +99,6 @@ def calculate_mask(
 
                 cutoff_value = torch.topk(prune_values.flatten(), num_el_prune, largest=True).values[-1]
 
-                def get_top_p_weights(tensor, p):
-                    flattened_tensor = tensor.flatten()
-                    sorted_tensor, _ = torch.sort(flattened_tensor, descending=True)
-                    num_weights = int(p * len(sorted_tensor))
-                    top_p_weights = sorted_tensor[:num_weights]
-                    return top_p_weights.reshape(*tensor.shape)
-
-                cutoff_value_2 = get_top_p_weights(prune_values, p)
-
                 #getting the final mask
                 mask = prune_values > cutoff_value
 
