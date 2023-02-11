@@ -150,7 +150,7 @@ def calculate_mask(
 
         # FOR NOW DONT UPDATE REST OF WEIGHTS
         # print(f"num nans in E: {torch.sum(E.isnan())}")
-        # W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
+        W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
 
 
 
@@ -198,13 +198,12 @@ def inverse_hessian(X, epsilon=0.01, flattened=False):
     # print(f"num zeros in hessian: {torch.sum(H == 0)}")
     # print(f"Determinant is {torch.linalg.det(H)}")
     # print(f"Hessian Diagonal is {H.diag()}")
-    H_inv = torch.inverse(H)
     
-    # H_inv = torch.cholesky(H_inv).T
-    H_inv = torch.transpose(torch.lu(H_inv)[0], 0, 1)
-    
-    return H_inv
+    L = torch.linalg.cholesky(H, upper=True)
+    H_inv = torch.triangular_solve(L, identity, upper=True)[0]
+    H_inv = H_inv @ H_inv.t()
 
+    return H_inv
 
 # Re-load model with pre-trained head
 model = OPTForCausalLM.from_pretrained("facebook/opt-125m", output_attentions=True, output_hidden_states=True)
