@@ -8,6 +8,8 @@ B is lazy block size (low B helps to reduce memory use)
 Bs is inverse of how often to make masks (e.g. when Bs is 4, make new masks with specified sparseness for every 4 columns)
 '''
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def calculate_mask(
     W,
     H_inv,
@@ -21,8 +23,8 @@ def calculate_mask(
 
     # Initialize the pruning mask M and block quantization errors E to all zeros
 
-    M = torch.zeros(d_row, d_col, dtype=torch.bool)
-    E = torch.zeros(d_row, B, dtype=torch.float64)
+    M = torch.zeros(d_row, d_col, dtype=torch.bool).to(device=device)
+    E = torch.zeros(d_row, B, dtype=torch.float64).to(device=device)
 
     # only need to calculate w_square and h_square once
     # Loop over blocks of columns of W (as specified by B)
@@ -40,7 +42,7 @@ def calculate_mask(
                 # Finding respective sections of hessian and weights matrix
                 w_square_section = torch.square(W[:, j:j + Bs])
                 h_square_section = torch.square(H_inv[j:j + Bs, j:j
-                        + Bs]).diag()  # 1 dimensional vector
+                        + Bs]).diag() # 1 dimensional vector
 
                 # getting the prune values matrix from W and H^-1 sections
                 prune_values = w_square_section / h_square_section.unsqueeze(0)
