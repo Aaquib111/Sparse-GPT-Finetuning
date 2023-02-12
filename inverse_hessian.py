@@ -27,7 +27,7 @@ def inverse_hessian(X, epsilon=0.01, flattened=False):
         H = 2 * (torch.sum(X @ X_T, dim=0)) + (epsilon * identity)
     
     triangle = torch.linalg.cholesky(H, upper=True)
-    triangle_inv = torch.triangular_solve(triangle, identity, upper=True)[0]
+    triangle_inv = torch.linalg.solve_triangular(identity, triangle, upper=True)[0]
     H_inv = triangle_inv @ triangle_inv.t()
 
     return H_inv
