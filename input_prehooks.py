@@ -1,3 +1,5 @@
+import torch
+
 # Generate forward pre hooks to record the input into features dict
 # Features is a dictionary for module inputs
     # Key is module name
@@ -18,8 +20,14 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False):
                 except:
                     pass
             # move tensors of input to device, possibly store on different device with more memory
+            
             if len(input) > 0:
-                features[name] = input[0].to(device=feature_storage_device)
+                # concatenate with self
+                if name in features:
+                    features[name] = torch.cat((features[name], input[0].to(device=feature_storage_device)), dim=0)
+                # make new entry if not existing
+                else:
+                    features[name] = input[0].to(device=feature_storage_device)
 
         
         # return the pre_hook function that will be fed into register_forward_pre_hook
