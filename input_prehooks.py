@@ -4,7 +4,8 @@
     # Value is module input
 # Function does NOT actually modify features, only puts hooks that will eventually 
 # modify features when input is later fed into the model
-def put_input_hooks(model, features, verbose=False):
+# specify device, have tensors on not cuda device so it doesn't hog vram
+def put_input_hooks(model, features, feature_storage_device, verbose=False):
 
     # Function to make a hook function that inserts input into features dictionary
     def get_features(name):
@@ -16,7 +17,10 @@ def put_input_hooks(model, features, verbose=False):
                     print(f"for input {name}, shape is {input[0].shape}")
                 except:
                     pass
-            features[name] = input
+            # move tensors of input to device, possibly store on different device with more memory
+            if len(input) > 0:
+                features[name] = input[0].to(device=feature_storage_device)
+
         
         # return the pre_hook function that will be fed into register_forward_pre_hook
         return pre_hook
