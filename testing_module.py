@@ -7,14 +7,8 @@ from datasets import load_dataset
 # device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # method to calculate the perplexity of a model (loss function), meant for testing functionality of sparse models
-def calculate_perp(model, input_data, device):
-    input_data = torch.squeeze(torch.stack(input_data)).to(device=device)
-    input_data.double()
-    outputs = model(input_data)[0] 
-    log_probs = outputs[0, -1, :].log_softmax(-1)
-    neg_log_likelihood = -log_probs.mean()
-    perplexity = torch.exp(neg_log_likelihood)      
-    return perplexity.item()
+def calculate_perp(model, input_data):
+    return torch.exp(model(input_ids=input_data, labels=input_data).loss) 
 
 if __name__ == '__main__':
     # model, data settings
