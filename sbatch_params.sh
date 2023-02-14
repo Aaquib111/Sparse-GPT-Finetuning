@@ -4,4 +4,4 @@
 #SBATCH --partition=gpu
 #SBATCH --nodelist=gpu-102
 
-jupyter execute SparseGPT.ipynb
+jupyter execute Testing.ipynb
