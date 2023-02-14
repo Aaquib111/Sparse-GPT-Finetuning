@@ -1,0 +1,36 @@
+2023-02-13 18:01:23,231 INFO    StreamThr :29450 [internal.py:wandb_internal():87] W&B internal server running at pid: 29450, started at: 2023-02-13 18:01:23.222977
+2023-02-13 18:01:23,240 DEBUG   HandlerThread:29450 [handler.py:handle_request():139] handle_request: status
+2023-02-13 18:01:23,243 DEBUG   SenderThread:29450 [sender.py:send_request():317] send_request: status
+2023-02-13 18:01:23,244 DEBUG   SenderThread:29450 [sender.py:send():303] send: header
+2023-02-13 18:01:23,244 INFO    WriterThread:29450 [datastore.py:open_for_write():75] open: /mnt/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230213_180122-1ysoeqgx/run-1ysoeqgx.wandb
+2023-02-13 18:01:23,454 DEBUG   SenderThread:29450 [sender.py:send():303] send: run
+2023-02-13 18:01:23,699 DEBUG   HandlerThread:29450 [handler.py:handle_request():139] handle_request: check_version
+2023-02-13 18:01:23,817 INFO    SenderThread:29450 [dir_watcher.py:__init__():216] watching files in: /mnt/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230213_180122-1ysoeqgx/files
+2023-02-13 18:01:23,817 INFO    SenderThread:29450 [sender.py:_start_run_threads():928] run started: 1ysoeqgx with start time 1676329283.102251
+2023-02-13 18:01:23,817 DEBUG   SenderThread:29450 [sender.py:send():303] send: summary
+2023-02-13 18:01:23,819 INFO    SenderThread:29450 [sender.py:_save_file():1171] saving file wandb-summary.json with policy end
+2023-02-13 18:01:23,819 DEBUG   SenderThread:29450 [sender.py:send_request():317] send_request: check_version
+2023-02-13 18:01:23,857 DEBUG   HandlerThread:29450 [handler.py:handle_request():139] handle_request: run_start
+2023-02-13 18:01:23,862 DEBUG   HandlerThread:29450 [system_info.py:__init__():31] System info init
+2023-02-13 18:01:23,862 DEBUG   HandlerThread:29450 [system_info.py:__init__():46] System info init done
+2023-02-13 18:01:23,862 INFO    HandlerThread:29450 [system_monitor.py:start():150] Starting system monitor
+2023-02-13 18:01:23,862 INFO    SystemMonitor:29450 [system_monitor.py:_start():116] Starting system asset monitoring threads
+2023-02-13 18:01:23,862 INFO    HandlerThread:29450 [system_monitor.py:probe():171] Collecting system info
+2023-02-13 18:01:23,873 INFO    SystemMonitor:29450 [interfaces.py:start():168] Started cpu
+2023-02-13 18:01:23,873 INFO    SystemMonitor:29450 [interfaces.py:start():168] Started disk
+2023-02-13 18:01:23,873 INFO    SystemMonitor:29450 [interfaces.py:start():168] Started gpu
+2023-02-13 18:01:23,874 INFO    SystemMonitor:29450 [interfaces.py:start():168] Started memory
+2023-02-13 18:01:23,874 INFO    SystemMonitor:29450 [interfaces.py:start():168] Started network
+2023-02-13 18:01:23,898 DEBUG   HandlerThread:29450 [system_info.py:probe():195] Probing system
+2023-02-13 18:01:23,926 DEBUG   HandlerThread:29450 [system_info.py:_probe_git():180] Probing git
+2023-02-13 18:01:23,964 DEBUG   HandlerThread:29450 [system_info.py:_probe_git():188] Probing git done
+2023-02-13 18:01:23,964 DEBUG   HandlerThread:29450 [system_info.py:probe():241] Probing system done
+2023-02-13 18:01:23,964 DEBUG   HandlerThread:29450 [system_monitor.py:probe():180] {'os': 'Linux-3.10.0-1160.el7.x86_64-x86_64-with-glibc2.17', 'python': '3.9.7', 'heartbeatAt': '2023-02-13T23:01:23.898365', 'startedAt': '2023-02-13T23:01:22.388359', 'docker': None, 'cuda': None, 'args': None, 'state': 'running', 'program': '<python with no main file>', 'git': {'remote': 'https://github.com/Aaquib111/Sparse-GPT-Finetuning.git', 'commit': 'd7533468665758096da07765652c4a1c5ca01cb1'}, 'email': None, 'root': '/mnt/gsfs0/home/asyed/pw/jobs/ICLR', 'host': 'gpu-102.cluster.local', 'username': 'asyed', 'executable': '/gs/gsfs0/hpc01/rhel8/apps/conda3/bin/python', 'cpu_count': 32, 'cpu_count_logical': 32, 'cpu_freq': {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, 'cpu_freq_per_core': [{'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}, {'current': 3000.0, 'min': 1500.0, 'max': 3000.0}], 'disk': {'total': 251.82959365844727, 'used': 12.420093536376953}, 'gpu': 'NVIDIA A100-PCIE-40GB', 'gpu_count': 4, 'gpu_devices': [{'name': 'NVIDIA A100-PCIE-40GB', 'memory_total': 42949672960}, {'name': 'NVIDIA A100-PCIE-40GB', 'memory_total': 42949672960}, {'name': 'NVIDIA A100-PCIE-40GB', 'memory_total': 42949672960}, {'name': 'NVIDIA A100-PCIE-40GB', 'memory_total': 42949672960}], 'memory': {'total': 503.6591911315918}}
+2023-02-13 18:01:23,964 INFO    HandlerThread:29450 [system_monitor.py:probe():181] Finished collecting system info
+2023-02-13 18:01:23,964 INFO    HandlerThread:29450 [system_monitor.py:probe():184] Publishing system info
+2023-02-13 18:01:23,964 DEBUG   HandlerThread:29450 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-02-13 18:01:23,966 DEBUG   HandlerThread:29450 [system_info.py:_save_pip():67] Saving pip packages done
+2023-02-13 18:01:23,967 DEBUG   HandlerThread:29450 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-02-13 18:01:24,818 INFO    Thread-13 :29450 [dir_watcher.py:_on_file_created():275] file/dir created: /mnt/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230213_180122-1ysoeqgx/files/wandb-summary.json
+2023-02-13 18:01:24,819 INFO    Thread-13 :29450 [dir_watcher.py:_on_file_created():275] file/dir created: /mnt/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230213_180122-1ysoeqgx/files/requirements.txt
+2023-02-13 18:01:24,819 INFO    Thread-13 :29450 [dir_watcher.py:_on_file_created():275] file/dir created: /mnt/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230213_180122-1ysoeqgx/files/conda-environment.yaml

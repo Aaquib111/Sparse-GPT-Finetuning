@@ -1,0 +1,4 @@
+tensor(9591.2793, device='cuda:0', grad_fn=<ExpBackward0>)
+tensor(47612.6602, device='cuda:0', grad_fn=<ExpBackward0>)
+tensor(47612.6602, device='cuda:0', grad_fn=<ExpBackward0>)
+Found cached dataset wikitext (/gs/gsfs0/users/asyed/.cache/huggingface/datasets/wikitext/wikitext-2-v1/1.0.0/a241db52902eaf2c6aa732210bead40c090019a499ceb13bcbfa3f8ab646a126)

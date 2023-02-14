@@ -1,0 +1,3 @@
+[NbClientApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbClientApp`.
+[NbClientApp] Executing SparseGPT.ipynb
+[NbClientApp] Executing notebook with kernel: python3
