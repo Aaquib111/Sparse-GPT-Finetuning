@@ -16,17 +16,13 @@ def inverse_hessian(X, epsilon=0.01, flattened=False):
 
     if flattened:
         X_T = torch.transpose(X, 0, 1)
-        identity = torch.eye(X.shape[0], dtype=torch.float64, device=device)
+        identity = torch.eye(X.shape[0], dtype=torch.float32, device=device)
         # print(f"shape of x @ x_t: {torch.sum(X @ X_T, dim=0).shape}")
         H = 2 * (X @ X_T) + (epsilon * identity)
     else:
         X_T = torch.transpose(X, 1, 2)
-        identity = torch.eye(X.shape[1], dtype=torch.float64, device=device)
+        identity = torch.eye(X.shape[1], dtype=torch.float32, device=device)
         # print(f"shape of x @ x_t: {torch.sum(X @ X_T, dim=0).shape}")
         H = 2 * (torch.sum(X @ X_T, dim=0)) + (epsilon * identity)
 
-    triangle = torch.linalg.cholesky(H, upper=True)
-    triangle_inv = torch.linalg.solve_triangular(identity, triangle, upper=True)
-    H_inv = triangle_inv @ triangle_inv.t()
-
-    return H_inv
+    return torch.cholesky_inverse(torch.linalg.cholesky(H))
