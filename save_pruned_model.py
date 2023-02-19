@@ -6,6 +6,17 @@ from tqdm import tqdm
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+# prune to 0s
+class ThresholdPruning(prune.BasePruningMethod):
+    PRUNING_TYPE = "unstructured"
+
+    # default threshold is 0, prunes weights that are already 0 (for training)
+    def __init__(self, threshold=0):
+        self.threshold = threshold
+
+    def compute_mask(self, tensor, default_mask):
+        return torch.abs(tensor) >= self.threshold
+
 # function to get module name from parameter name
 def get_module_name(param_name):
     if param_name[-5:] == ".bias":
@@ -15,11 +26,23 @@ def get_module_name(param_name):
     else:
         return None, None
 
-def load_into_model(existing_model, state_dict_path):
-    apply_identity_prune(model=existing_model)
+# load model without masks
+def load_unmasked_model(existing_model, state_dict_path):
+    existing_model.load_state_dict(torch.load(state_dict_path))
+
+# load model with masks
+def load_masked_model(existing_model, state_dict_path):
+    # apply_identity_prune(model=existing_model)
 
     existing_model.load_state_dict(torch.load(state_dict_path))
-        
+
+    prune.global_unstructured(
+        existing_model.parameters(), pruning_method=ThresholdPruning, threshold=0
+    )
+
+
+# no longer needed
+"""   
 # Iterate through all layers of preloaded model and apply the identity mask
 def apply_identity_prune(model):
     module_lookup_dict = {}
@@ -50,3 +73,4 @@ def apply_identity_prune(model):
             module_name, param_type = get_module_name(name)
             module = module_lookup_dict[module_name]
             prune.identity(module=module, name=param_type)
+"""
