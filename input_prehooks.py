@@ -12,13 +12,13 @@ import torch
 
 def get_feature_storage_name(param_name):
     if 'k_proj' in param_name:
-        param_name = param_name.replace("k_proj", "proj")
+        param_name = param_name.replace("k_proj", "in_proj")
 
     elif 'v_proj' in param_name:
-        param_name = param_name.replace("v_proj", "proj")
+        param_name = param_name.replace("v_proj", "in_proj")
 
     elif 'q_proj' in param_name:
-        param_name = param_name.replace("q_proj", "proj")
+        param_name = param_name.replace("q_proj", "in_proj")
     return param_name
 
 
