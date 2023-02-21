@@ -32,8 +32,8 @@ def check_whitelist(param_name, whitelist):
 
 
 opt_whitelist = ['self_attn.k_proj',
-'self_attn.v_proj',
-'self_attn.q_proj',
+# 'self_attn.v_proj',
+# 'self_attn.q_proj',
 'self_attn.out_proj',
 'fc1',
 'fc2']
@@ -58,12 +58,14 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
             if len(input) > 0 and check_whitelist(name, whitelist):
                 # get name as key to store in features (since k_proj, q_proj, v_proj have same input)
                 storage_name = get_feature_storage_name(name)
-                # concatenate with self
+                # concatenate with self (but don't duplicate key, value, query)
+
+                input_tensor = input[0].to(device=feature_storage_device)
                 if storage_name in features:
-                    features[storage_name] = torch.cat((features[storage_name], input[0].to(device=feature_storage_device)), dim=0)
+                    features[storage_name] = torch.cat((features[storage_name], input_tensor), dim=0)
                 # make new entry if not existing
                 else:
-                    features[storage_name] = input[0].to(device=feature_storage_device)
+                    features[storage_name] = input_tensor
 
         
         # return the pre_hook function that will be fed into register_forward_pre_hook
