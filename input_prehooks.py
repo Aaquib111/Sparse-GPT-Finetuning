@@ -1,4 +1,5 @@
 import torch
+from inverse_hessian import calc_hessian
 
 # Generate forward pre hooks to record the input into features dict
 # Features is a dictionary for module inputs
@@ -41,7 +42,7 @@ opt_whitelist = ['self_attn.k_proj',
 
 def put_input_hooks(model, features, feature_storage_device, verbose=False, whitelist=opt_whitelist):
 
-    # Function to make a hook function that inserts input into features dictionary
+    # Function to make a hook function that inserts input hessian into features dictionary
     def get_features(name):
         print(name)
 
@@ -53,19 +54,25 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
                 except:
                     pass
 
-            # move tensors of input to device, possibly store on different device with more memory
+            # move tensors of input hessian to device, possibly store on different device with more memory
             # check whitelist
             if len(input) > 0 and check_whitelist(name, whitelist):
                 # get name as key to store in features (since k_proj, q_proj, v_proj have same input)
                 storage_name = get_feature_storage_name(name)
-                # concatenate with self (but don't duplicate key, value, query)
 
                 input_tensor = input[0].to(device=feature_storage_device)
+                # check if flattened
+                if len(input_tensor.shape) == 2:
+                    input_hessian = calc_hessian(torch.transpose(input_tensor, 0, 1), flattened=True)
+                # not flattened
+                else:
+                    input_hessian = calc_hessian(torch.transpose(input_tensor, 1, 2), flattened=False)
+
                 if storage_name in features:
-                    features[storage_name] = torch.cat((features[storage_name], input_tensor), dim=0)
+                    features[storage_name] += input_hessian
                 # make new entry if not existing
                 else:
-                    features[storage_name] = input_tensor
+                    features[storage_name] = input_hessian
 
         
         # return the pre_hook function that will be fed into register_forward_pre_hook
