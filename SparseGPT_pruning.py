@@ -22,7 +22,7 @@ def get_module_name(param_name):
     else:
         return None, None
 
-def sparse_prune(model, feature_hessians, 
+def sparsegpt_prune(model, feature_hessians, 
 EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist):
     module_dict = {}
     for n, m in model.named_modules():
@@ -36,6 +36,7 @@ EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist):
         param_dict[n] = m
     # print(parameter_list)
 
+    model.eval()
     with torch.no_grad():
         # for name in tqdm(param_names):
         for param_name in tqdm(param_names, total=len(param_names)):
@@ -46,7 +47,7 @@ EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist):
                 or param_type is None or param_type!="weight":
                 continue
 
-            if len(param_dict[param_name]) < 2:
+            if len(param_dict[param_name].shape) < 2:
                 continue
 
             param = param_dict[param_name]
