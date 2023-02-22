@@ -25,14 +25,13 @@ def calculate_mask(
 
     M = torch.zeros(d_row, d_col, dtype=torch.bool).to(device=device)
     E = torch.zeros(d_row, B, dtype=torch.float64).to(device=device)
-
     # only need to calculate w_square and h_square once
     # Loop over blocks of columns of W (as specified by B)
 
     for i in range(0, d_col, B):
 
         # Loop over columns within a block
-        for j in range(i, min(i + B - 1, d_col)):
+        for j in range(i, min(i + B, d_col)):
 
             # If j is a multiple of Bs, prune a portion of the weights
             if j % Bs == 0:
@@ -41,8 +40,7 @@ def calculate_mask(
 
                 # Finding respective sections of hessian and weights matrix
                 w_square_section = torch.square(W[:, j:j + Bs])
-                h_square_section = torch.square(H_inv[j:j + Bs, j:j
-                        + Bs]).diag() # 1 dimensional vector
+                h_square_section = torch.square(H_inv[j:j + Bs, j:j + Bs]).diag() # 1 dimensional vector
 
                 # getting the prune values matrix from W and H^-1 sections
                 prune_values = w_square_section / h_square_section.unsqueeze(0)
@@ -71,5 +69,4 @@ def calculate_mask(
         W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
 
     # return mask
-
     return M

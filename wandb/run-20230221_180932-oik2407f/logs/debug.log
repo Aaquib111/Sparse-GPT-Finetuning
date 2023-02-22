@@ -1,0 +1,48 @@
+2023-02-21 18:09:32,628 INFO    MainThread:27272 [wandb_setup.py:_flush():68] Configure stats pid to 27272
+2023-02-21 18:09:32,628 INFO    MainThread:27272 [wandb_setup.py:_flush():68] Loading settings from /gs/gsfs0/users/asyed/.config/wandb/settings
+2023-02-21 18:09:32,628 INFO    MainThread:27272 [wandb_setup.py:_flush():68] Loading settings from /gs/gsfs0/home/asyed/pw/jobs/ICLR/wandb/settings
+2023-02-21 18:09:32,628 INFO    MainThread:27272 [wandb_setup.py:_flush():68] Loading settings from environment variables: {'_require_service': 'True'}
+2023-02-21 18:09:32,628 INFO    MainThread:27272 [wandb_setup.py:_flush():68] Inferring run settings from compute environment: {'program': '<python with no main file>'}
+2023-02-21 18:09:32,628 INFO    MainThread:27272 [wandb_init.py:_log_setup():476] Logging user logs to /gs/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230221_180932-oik2407f/logs/debug.log
+2023-02-21 18:09:32,629 INFO    MainThread:27272 [wandb_init.py:_log_setup():477] Logging internal logs to /gs/gsfs0/home/asyed/pw/jobs/ICLR/wandb/run-20230221_180932-oik2407f/logs/debug-internal.log
+2023-02-21 18:09:32,629 INFO    MainThread:27272 [wandb_init.py:init():516] calling init triggers
+2023-02-21 18:09:32,629 INFO    MainThread:27272 [wandb_init.py:init():519] wandb.init called with sweep_config: {}
+config: {'token_length': 2048, 'model_name': 'opt-350m', 'stride': 2048}
+2023-02-21 18:09:32,629 INFO    MainThread:27272 [wandb_init.py:init():535] re-initializing run, found existing run on stack: 8it4cf2l
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [wandb_run.py:_finish():1753] finishing run aaquib111/ICLR/8it4cf2l
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [jupyter.py:save_history():448] not saving jupyter history
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [wandb_init.py:_jupyter_teardown():408] cleaning up jupyter logic
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [wandb_run.py:_atexit_cleanup():1955] got exitcode: 0
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [wandb_run.py:_restore():1938] restore
+2023-02-21 18:09:32,630 INFO    MainThread:27272 [wandb_run.py:_restore():1944] restore done
+2023-02-21 18:09:42,869 INFO    MainThread:27272 [wandb_init.py:init():569] starting backend
+2023-02-21 18:09:42,869 INFO    MainThread:27272 [wandb_init.py:init():573] setting up manager
+2023-02-21 18:09:42,873 INFO    MainThread:27272 [backend.py:_multiprocessing_setup():102] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2023-02-21 18:09:42,874 INFO    MainThread:27272 [wandb_init.py:init():580] backend started and connected
+2023-02-21 18:09:42,885 INFO    MainThread:27272 [wandb_run.py:_label_probe_notebook():1116] probe notebook
+2023-02-21 18:09:42,885 INFO    MainThread:27272 [wandb_run.py:_label_probe_notebook():1126] Unable to probe notebook: 'NoneType' object has no attribute 'get'
+2023-02-21 18:09:42,885 INFO    MainThread:27272 [wandb_init.py:init():658] updated telemetry
+2023-02-21 18:09:42,958 WARNING MainThread:27272 [wandb_init.py:init():1099] interrupted
+Traceback (most recent call last):
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/wandb/sdk/wandb_init.py", line 1078, in init
+    run = wi.init()
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/wandb/sdk/wandb_init.py", line 676, in init
+    run._populate_git_info()
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/wandb/sdk/wandb_run.py", line 688, in _populate_git_info
+    self._remote_url, self._commit = repo.remote_url, repo.last_commit
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/wandb/sdk/lib/git.py", line 93, in last_commit
+    if not self.repo.head or not self.repo.head.is_valid():
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/git/refs/symbolic.py", line 396, in is_valid
+    self.object
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/git/refs/symbolic.py", line 219, in _get_object
+    return Object.new_from_sha(self.repo, hex_to_bin(self.dereference_recursive(self.repo, self.path)))
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/git/objects/base.py", line 94, in new_from_sha
+    oinfo = repo.odb.info(sha1)
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/git/db.py", line 40, in info
+    hexsha, typename, size = self._git.get_object_header(bin_to_hex(binsha))
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/git/cmd.py", line 1383, in get_object_header
+    return self.__get_object_header(cmd, ref)
+  File "/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/git/cmd.py", line 1370, in __get_object_header
+    return self._parse_object_header(cmd.stdout.readline())
+KeyboardInterrupt

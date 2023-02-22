@@ -1,0 +1,60 @@
+
+Found cached dataset wikitext (/gs/gsfs0/users/asyed/.cache/huggingface/datasets/wikitext/wikitext-2-raw-v1/1.0.0/a241db52902eaf2c6aa732210bead40c090019a499ceb13bcbfa3f8ab646a126)
+100%|██████████| 196/196 [00:00<00:00, 21016.02it/s]
+100%|██████████| 196/196 [00:00<00:00, 20803.29it/s]
+  0%|          | 0/141 [00:00<?, ?it/s]/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:11<00:00, 11.96it/s]
+100%|██████████| 196/196 [00:00<00:00, 60800.50it/s]
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:11<00:00, 11.95it/s]
+100%|██████████| 196/196 [00:00<00:00, 60913.13it/s]
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:11<00:00, 11.86it/s]
+100%|██████████| 196/196 [00:00<00:00, 60482.90it/s]
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:11<00:00, 11.83it/s]
+100%|██████████| 196/196 [00:00<00:00, 59892.44it/s]
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:11<00:00, 11.81it/s]
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:11<00:00, 12.06it/s]
+calculate_mask.py    __pycache__	   testing_module.py
+CerebrasGPT.ipynb    requirements.txt	   tmp
+cerebras_pruning.py  save_pruned_model.py  trainingv2.py
+input_prehooks.py    SparseGPT.ipynb	   wandb
+inverse_hessian.py   SparseGPT.py
+pruned_models	     Testing.ipynb
+opt-125m-0.1.pt  opt-125m-0.9.pt       opt-125m-test-0.7.pt
+opt-125m-0.3.pt  opt-125m-test-0.2.pt  opt-125m-test-0.9.pt
+opt-125m-0.5.pt  opt-125m-test-0.3.pt  opt-350m-0.2.pt
+opt-125m-0.7.pt  opt-125m-test-0.5.pt
+opt-125m-0.1.pt  opt-125m-0.5.pt  opt-125m-0.9.pt
+opt-125m-0.3.pt  opt-125m-0.7.pt  opt-350m-0.2.pt
