@@ -54,7 +54,7 @@ def mask_from_pruned(model, module_blacklist=default_opt_blacklist):
             or param_type is None or param_type!="weight":
             continue
 
-        if len(param_dict[n]) < 2:
+        if len(param_dict[n].shape) < 2:
             continue
 
         ThresholdPruning.apply(module=module_dict[module_name], name=param_type)
