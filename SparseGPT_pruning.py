@@ -22,6 +22,7 @@ def get_module_name(param_name):
     else:
         return None, None
 
+
 def sparsegpt_prune(model, feature_hessians, 
 EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist):
     module_dict = {}
