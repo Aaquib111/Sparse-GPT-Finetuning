@@ -17,7 +17,7 @@ def get_prop_zeros(model):
 # model_size is for naming the save files (like opt-125m)
 # sparseness sequence is sequence of sparsities (.8 sparseness = 20% proportion of zeros)
 # training_data and tokenizer are for fine_tuning (should already be preprocessed with torch.format and stuff)
-def iterative_sparsegpt_prune_tune(model, model_size, sparseness_sequence, feature_hessians, EPSILON, B, Bs, training_data, tokenizer):
+def iterative_sparsegpt_prune_tune(model, model_size, sparseness_sequence, feature_hessians, EPSILON, B, Bs, training_data, tokenizer, EPOCH_COUNT):
     # for sparseness_index in range(len(sparseness_sequence)):
     for sparseness in sparseness_sequence:
 
@@ -26,7 +26,7 @@ def iterative_sparsegpt_prune_tune(model, model_size, sparseness_sequence, featu
         # activate masks
         mask_from_pruned(model=model)
 
-        fine_tune(model=model, training_data=training_data, EPOCH_COUNT=1, tokenizer=tokenizer)
+        fine_tune(model=model, training_data=training_data, EPOCH_COUNT=EPOCH_COUNT, tokenizer=tokenizer)
 
         # deactivate masks
         unmask_model(model=model)
@@ -37,7 +37,7 @@ def iterative_sparsegpt_prune_tune(model, model_size, sparseness_sequence, featu
         torch.save(model.state_dict(), f'pruned_models/{pruned_model_name}.pt')
 
 
-def iterative_cerebras_prune_tune(model, model_size, sparseness_sequence, training_data, tokenizer):
+def iterative_cerebras_prune_tune(model, model_size, sparseness_sequence, training_data, tokenizer, EPOCH_COUNT):
     for sparseness in sparseness_sequence:
 
         mask_lowest(model=model, amount=1-sparseness)
@@ -45,7 +45,7 @@ def iterative_cerebras_prune_tune(model, model_size, sparseness_sequence, traini
         # activate masks
         mask_from_pruned(model=model)
 
-        fine_tune(model=model, training_data=training_data, EPOCH_COUNT=1, tokenizer=tokenizer)
+        fine_tune(model=model, training_data=training_data, EPOCH_COUNT=EPOCH_COUNT, tokenizer=tokenizer)
 
         # deactivate masks
         unmask_model(model=model)
