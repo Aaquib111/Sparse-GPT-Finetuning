@@ -26,15 +26,15 @@ def load_unmasked_model(existing_model, state_dict_path):
     existing_model.load_state_dict(torch.load(state_dict_path))
 
 # prune 0s to a mask, to make training easier (ostensibly)
-class ThresholdPruning(prune.BasePruningMethod):
+class ZeroPruning(prune.BasePruningMethod):
     PRUNING_TYPE = "unstructured"
 
     # default threshold is 0, prunes weights that are already 0 (for training)
-    def __init__(self, threshold=0):
-        self.threshold = threshold
+    def __init__(self):
+        pass
 
     def compute_mask(self, tensor, default_mask):
-        return torch.abs(tensor) >= self.threshold
+        return torch.abs(tensor) != 0
 
 # apply pytorch mask in place of 0 weights to make backpropagation easier for training
 default_opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
@@ -62,7 +62,7 @@ def mask_from_pruned(model, module_blacklist=default_opt_blacklist):
         if len(param_dict[n].shape) < 2:
             continue
 
-        ThresholdPruning.apply(module=module_dict[module_name], name=param_type)
+        ZeroPruning.apply(module=module_dict[module_name], name=param_type)
 
 # unmask model with 0s in place
 def unmask_model(model, module_blacklist=default_opt_blacklist):
