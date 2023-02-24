@@ -13,6 +13,11 @@ def get_module_name(param_name):
         return param_name[:-5], "bias"
     elif param_name[-7:] == ".weight":
         return param_name[:-7], "weight"
+    
+    elif param_name[-10:] == ".bias_orig":
+        return param_name[:-10], "bias"
+    elif param_name[-12:] == ".weight_orig":
+        return param_name[:-12], "weight"
     else:
         return None, None
 
@@ -59,6 +64,32 @@ def mask_from_pruned(model, module_blacklist=default_opt_blacklist):
 
         ThresholdPruning.apply(module=module_dict[module_name], name=param_type)
 
+# unmask model with 0s in place
+def unmask_model(model, module_blacklist=default_opt_blacklist):
+    module_dict = {}
+    for n, m in model.named_modules():
+        module_dict[n] = m
+    # print(module_dict.keys())
+    
+    parameter_list = []
+    param_dict = {}
+    for n, m in model.named_parameters():
+        parameter_list.append(n)
+        param_dict[n] = m
+    # print(parameter_list)
+
+    for n in parameter_list:
+        module_name, param_type = get_module_name(n)
+
+        # skip bias, embed, etc parameters
+        if module_name in module_blacklist or module_name is None \
+            or param_type is None or param_type!="weight":
+            continue
+
+        if len(param_dict[n].shape) < 2:
+            continue
+            
+        prune.remove(module=module_dict[module_name], name=param_type)
 
 # load model with masks
 def load_masked_model(existing_model, state_dict_path):
