@@ -33,12 +33,12 @@ def calculate_mask(
     # previous mask, check where weights are 0 (don't want to update/select these weights)
     prev_mask = (W != 0)
     # add up tot number of weights already masked
-    prev_num_masked = torch.sum(~prev_mask)
+    # prev_num_masked = torch.sum(~prev_mask)
     # print(f"num weights masked: {prev_num_masked}")
     # print(f"total weights: {W.numel}")
     # update proportion to prune, accounting for not pruning masked weights
     # print(f"original p: {p}")
-    p = 1 - (1-p) * (torch.numel(W) - prev_num_masked)/torch.numel(W)
+    # p = 1 - (1-p) * (torch.numel(W) - prev_num_masked)/torch.numel(W)
     # print(f"new p: {p}")
 
     # only need to calculate w_square and h_square once
@@ -63,7 +63,7 @@ def calculate_mask(
                 # getting the prune values matrix from W and H^-1 sections
                 prune_values = w_square_section / h_square_section.unsqueeze(0)
 
-                # set prune_values of already-pruned weights to 0 (to not select them)
+                # set prune_values of already-pruned weights to 0 (to select them)
                 prune_values = prune_values * prev_mask_section
 
                 num_el_prune = int(p * prune_values.numel())
@@ -90,6 +90,6 @@ def calculate_mask(
         # Update all remaining weights
         W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
 
-    print(f"Proportion of Mask 0s: {prop_zeros(M)}")
+    # print(f"Proportion of Mask 0s: {prop_zeros(M)}")
     # return mask
     return M
