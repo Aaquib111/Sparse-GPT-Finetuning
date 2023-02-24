@@ -4,7 +4,8 @@ import torch
 from tqdm import tqdm
 from torch.nn.utils import prune
 from inverse_hessian import calc_inverse_hessian
-from calculate_mask import calculate_mask
+import calculate_mask
+import iterative_calculate_mask
 
 opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
 
@@ -24,7 +25,7 @@ def get_module_name(param_name):
 
 
 def sparsegpt_prune(model, feature_hessians, 
-EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist):
+EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist, iterative=True):
     module_dict = {}
     for n, m in model.named_modules():
         module_dict[n] = m
@@ -65,7 +66,10 @@ EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist):
             inv_hess = calc_inverse_hessian(layer_hessian, epsilon=EPSILON)
 
             # calculate mask
-            mask = calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
+            if iterative:
+                mask = iterative_calculate_mask.calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
+            else:
+                mask = calculate_mask.calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
 
             # get module from lookup dictionary by module name
             module = module_dict[module_name]
