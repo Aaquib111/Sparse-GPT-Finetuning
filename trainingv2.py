@@ -14,7 +14,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def fine_tune(model, training_data, EPOCH_COUNT, tokenizer):
-
+    
     #dataloader from dataloader (mlm=False when training without mask)
     reformatted_data = DataLoader(training_data, collate_fn=DataCollatorForLanguageModeling(tokenizer, mlm=False))
 
