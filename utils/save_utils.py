@@ -113,4 +113,4 @@ def unmask_model(model, module_blacklist=default_opt_blacklist):
             continue
         
         prune.remove(module=module_dict[module_name], name=param_type)
-        torch.cuda.clear_cache()
+        # torch.cuda.clear_cache()

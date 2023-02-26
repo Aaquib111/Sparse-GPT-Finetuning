@@ -1,4 +1,4 @@
-from input_prehooks import get_feature_storage_name
+from utils.prehook_utils import get_feature_storage_name
 import gc
 import torch
 from tqdm import tqdm
@@ -6,7 +6,7 @@ from torch.nn.utils import prune
 from utils.hessian_utils import calc_inverse_hessian
 from utils.mask_utils import calculate_mask
 
-opt_blacklist = ['module.model.decoder.embed_tokens', 'module.model.decoder.embed_positions']
+opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
 
 #DEVICE
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -101,7 +101,7 @@ def mask_lowest(model, amount=.2, module_blacklist=opt_blacklist, prune_remove=T
         module_name, param_type = get_module_name(n)
 
         # skip bias, embed, etc parameters
-        if module_name in default_opt_blacklist or module_name is None \
+        if module_name in module_blacklist or module_name is None \
             or param_type is None or param_type!="weight":
             continue
 

@@ -81,8 +81,11 @@ def finetune_model_inplace(model, tokenizer, SPARSITY, device=DEVICE, EPOCH_COUN
                 break
             batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
+            print(f"max memory during batch: {torch.cuda.memory_allocated()}")
             loss = outputs[0]
             loss.backward()
             t_optim.step()
             t_optim.zero_grad()
+        
+        print(f"memory allocated after epoch: {torch.cuda.memory_allocated()}")
     #unmask_model(model)
