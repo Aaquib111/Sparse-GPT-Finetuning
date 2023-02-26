@@ -36,6 +36,7 @@ def calc_inverse_hessian(H, epsilon=0.01):
     identity = torch.eye(H.shape[0], dtype=torch.float64, device=device)
     H += (epsilon * identity)
 
+    # return torch.cholesky_inverse(torch.linalg.cholesky(H, upper=True), upper=True)
     return torch.cholesky_inverse(torch.linalg.cholesky(H, upper=True), upper=True)
 
 

@@ -89,9 +89,13 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
         # return the pre_hook function that will be fed into register_forward_pre_hook
         return pre_hook
     
+    all_hooks = []
     # call get_features, put in hooks at every module
     for n, m in model.named_modules():
-        new_hook = get_features(n)
+        hook_func = get_features(n)
         # print(m)
-        m.register_forward_pre_hook(new_hook)
+        new_hook = m.register_forward_pre_hook(hook_func)
+        all_hooks.append(new_hook)
+
+    return all_hooks
 
