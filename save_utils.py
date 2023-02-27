@@ -4,7 +4,7 @@ import torch
 from torch.nn.utils import prune
 from tqdm import tqdm
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 # function to get module name from parameter name
@@ -20,7 +20,7 @@ def get_module_name(param_name):
         return param_name[:-12], "weight"
     else:
         return None, None
-
+    
 # load model without masks
 def load_unmasked_model(existing_model, state_dict_path):
     existing_model.load_state_dict(torch.load(state_dict_path))
@@ -37,7 +37,7 @@ class ZeroPruning(prune.BasePruningMethod):
         return torch.abs(tensor) != 0
 
 # apply pytorch mask in place of 0 weights to make backpropagation easier for training
-default_opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
+default_opt_blacklist = ['module.model.decoder.embed_tokens', 'module.model.decoder.embed_positions']
 def mask_from_pruned(model, module_blacklist=default_opt_blacklist):
     module_dict = {}
     for n, m in model.named_modules():
@@ -73,6 +73,21 @@ def load_masked_model(existing_model, state_dict_path):
     # then reapply the (previously removed) masks
     mask_from_pruned(model=existing_model)
     
+def load_masked_model_single(existing_model, state_dict_path):
+    #print('in')
+    #print(torch.cuda.is_initialized())
+    state_dict = torch.load(state_dict_path, map_location=torch.device('cpu'))
+    #print(torch.cuda.is_initialized())
+    if "module" in list(state_dict.keys())[0]:
+        state_dict = {k.replace('module.',''): v for k, v in state_dict.items()}
+    #print(torch.cuda.is_initialized())
+    existing_model.load_state_dict(state_dict)
+    #print(torch.cuda.is_initialized())
+    # then reapply the (previously removed) masks
+    mask_from_pruned(model=existing_model)
+    #print(torch.cuda.is_initialized())
+    #print('out')
+    
 # unmask model with 0s in place
 def unmask_model(model, module_blacklist=default_opt_blacklist):
     module_dict = {}
@@ -97,42 +112,6 @@ def unmask_model(model, module_blacklist=default_opt_blacklist):
 
         if len(param_dict[n].shape) < 2:
             continue
-            
+        
         prune.remove(module=module_dict[module_name], name=param_type)
         torch.cuda.clear_cache()
-
-
-
-'''
-# Iterate through all layers of preloaded model and apply the identity mask
-def apply_identity_prune(model):
-    module_lookup_dict = {}
-    for module_name, module_iter in model.named_modules():
-        module_lookup_dict[module_name] = module_iter
-
-    # Using calibration data (inputs to each intermediate weight layer)
-    # Iterate through named parameters, calculate inverse hessian and calculate mask
-
-    # without this
-    param_lookup_dict = {}
-    param_names = []
-    for name, param in model.named_parameters():
-        param_names.append(name)
-        param_lookup_dict[name] = param
-
-    with torch.no_grad():
-        for name in tqdm(param_names):
-            param = param_lookup_dict[name]
-
-            if 'embed' in name:
-                continue
-            
-            # skip norms which have 1 dimension
-            if len(param.shape) < 2:
-                continue
-            
-            module_name, param_type = get_module_name(name)
-            module = module_lookup_dict[module_name]
-            prune.identity(module=module, name=param_type)
-
-'''

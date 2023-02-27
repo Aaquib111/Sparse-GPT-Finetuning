@@ -1,5 +1,7 @@
 import torch
-from inverse_hessian import calc_hessian
+from utils.hessian_utils import calc_hessian
+from collections import OrderedDict
+from typing import Dict, Callable
 
 # Generate forward pre hooks to record the input into features dict
 # Features is a dictionary for module inputs
@@ -63,17 +65,17 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
                 #print(storage_name)
                 # check if flattened
                 if len(input[0].shape) == 2:
-                    input_hessian = calc_hessian(torch.transpose(input[0], 0, 1), flattened=True).to(device=feature_storage_device)
+                    input_hessian = calc_hessian(torch.transpose(input[0], 0, 1), flattened=True).cpu()
                 # not flattened
                 else:
-                    input_hessian = calc_hessian(torch.transpose(input[0], 1, 2), flattened=False).to(device=feature_storage_device)
-
+                    input_hessian = calc_hessian(torch.transpose(input[0], 1, 2), flattened=False).cpu()
+                
                 if storage_name in features:
                     features[storage_name] += input_hessian
                 # make new entry if not existing
                 else:
                     features[storage_name] = input_hessian
-                    
+                del input_hessian
                 torch.cuda.empty_cache()
                 '''if features[storage_name].shape[0] % offload_freq == 0:
                     if os.path.exists(f'{storage_dir}/{name}'):
@@ -89,9 +91,23 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
         # return the pre_hook function that will be fed into register_forward_pre_hook
         return pre_hook
     
+    all_hooks = []
     # call get_features, put in hooks at every module
     for n, m in model.named_modules():
-        new_hook = get_features(n)
+        hook_func = get_features(n)
         # print(m)
-        m.register_forward_pre_hook(new_hook)
+        new_hook = m.register_forward_pre_hook(hook_func)
+        all_hooks.append(new_hook)
 
+    return all_hooks
+
+def remove_all_hooks(model: torch.nn.Module) -> None:
+    for name, child in model._modules.items():
+        if child is not None:
+            if hasattr(child, "_forward_hooks"):
+                child._forward_hooks: Dict[int, Callable] = OrderedDict()
+            elif hasattr(child, "_forward_pre_hooks"):
+                child._forward_pre_hooks: Dict[int, Callable] = OrderedDict()
+            elif hasattr(child, "_backward_hooks"):
+                child._backward_hooks: Dict[int, Callable] = OrderedDict()
+            remove_all_hooks(child)
