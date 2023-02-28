@@ -25,15 +25,6 @@ def get_feature_storage_name(param_name):
     return param_name
 
 
-# Function to check if param should be added to features dictionary
-def check_whitelist(param_name, whitelist):
-    for name_end in whitelist:
-        if name_end in param_name:
-            return True
-
-    return False
-
-
 opt_whitelist = ['self_attn.k_proj',
 'decoder.project_out',
 'decoder.project_in',
@@ -44,13 +35,24 @@ opt_whitelist = ['self_attn.k_proj',
 'fc2']
 
 
+
+# Function to check if param should be added to features dictionary
+def check_whitelist(param_name, whitelist=opt_whitelist):
+    for name_end in whitelist:
+        if name_end in param_name:
+            return True
+
+    return False
+
+
 def put_input_hooks(model, features, feature_storage_device, verbose=False, whitelist=opt_whitelist):#, storage_dir, offload_freq=16
 
     # Function to make a hook function that inserts input hessian into features dictionary
     def get_features(name):
 
         # pre_hook function that is input into nn.module.register_forward_pre_hook
-        def pre_hook(model, input):
+        def pre_hook(model, input, output):
+            # print("forward hook called")
             if verbose:
                 try:
                     print(f"for input {name}, shape is {input[0].shape}")
@@ -94,10 +96,44 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
     all_hooks = []
     # call get_features, put in hooks at every module
     for n, m in model.named_modules():
-        hook_func = get_features(n)
-        # print(m)
-        new_hook = m.register_forward_pre_hook(hook_func)
-        all_hooks.append(new_hook)
+        if check_whitelist(n, whitelist=whitelist):
+            hook_func = get_features(n)
+            # print(m)
+            all_hooks.append(m.register_forward_hook(hook_func))
+
+    return all_hooks
+
+
+
+# Put backwards hooks to keep backpropagation masked, don't update pruned weights
+# Operates on models with prune.remove() already done
+def put_backward_hooks(model, whitelist=opt_whitelist):#, storage_dir, offload_freq=16
+
+    masks = {}
+    # Iterate through layers, calculate mask 
+    for n, p in model.named_parameters():
+        if check_whitelist(n, whitelist=whitelist) and "weight" in n:
+            masks[n] = (p != 0)
+
+    # Function to make a hook function that masks the gradient of a parameter
+    def mask_grad(name, masks):
+
+        # pre_hook function that is input into nn.module.register_forward_pre_hook
+        def back_hook(grad):
+            # print("backward hook called")
+            return grad * masks[name].float()
+
+        # return the pre_hook function that will be fed into register_forward_pre_hook
+        return back_hook
+    
+    all_hooks = []
+    # call get_features, put in hooks at every module
+    for n, p in model.named_parameters():
+        if check_whitelist(n, whitelist=whitelist) and "weight" in n:
+            hook_func = mask_grad(n, masks)
+            # print(m)
+            new_hook = p.register_hook(hook_func)
+            all_hooks.append(new_hook)
 
     return all_hooks
 

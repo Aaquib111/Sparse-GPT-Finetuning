@@ -21,6 +21,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import  DataCollatorForLanguageModeling, OPTForCausalLM, AutoTokenizer, get_linear_schedule_with_warmup, set_seed
 from utils.save_utils import load_masked_model, load_masked_model_single
+from utils.prehook_utils import put_backward_hooks, remove_all_hooks, check_whitelist
 
 from accelerate import Accelerator, DistributedType
 from tqdm import tqdm
@@ -151,7 +152,7 @@ def training_function(config, args):
 
     # Instantiate dataloaders.
     train_dataloader = DataLoader(
-        tokenized_datasets["train"], collate_fn=collate_fn, batch_size=batch_size
+        tokenized_datasets["train"].with_format("torch"), collate_fn=collate_fn, batch_size=batch_size
     )
 
     set_seed(seed)
@@ -166,6 +167,17 @@ def training_function(config, args):
         load_masked_model_single(model, f'pruned_models/{config["model_name"]}-{config["sparsity"]}.pt')
     else:
         model = config.get('model')
+
+
+    # back_hooks = put_backward_hooks(model=model)
+
+    for name, param in model.named_parameters():
+        if 'weight' in name and check_whitelist(name):
+            mask = param != 0
+            print(f"prop nonzeros: {torch.sum(mask) / torch.numel(param)}")
+            def hook(grad, mask=mask):
+                return grad * mask.float()
+            param.register_hook(hook)
 
     # New Code #
     # For FSDP feature, it is highly recommended and efficient to prepare the model before creating optimizer
@@ -227,7 +239,7 @@ def training_function(config, args):
             model.train()
             if args.with_tracking:
                 total_loss = 0
-            for step, batch in enumerate(tqdm(train_dataloader, total=config['max_step'])):
+            for step, batch in enumerate(train_dataloader):
                 if step == config['max_step']:
                     break
                 # We need to skip steps until we reach the resumed step
@@ -237,6 +249,7 @@ def training_function(config, args):
                 # We could avoid this line since we set the accelerator with `device_placement=True`.
                 batch.to(accelerator.device)
                 outputs = model(**batch, labels=batch['input_ids'])
+                # print(f"max memory: {torch.cuda.memory_allocated()}")
                 loss = outputs.loss
                 #print(f'Loss: {loss}')
                 loss = loss / gradient_accumulation_steps
@@ -276,6 +289,9 @@ def training_function(config, args):
                 },
                 step=epoch,
         )
+    remove_all_hooks(model)
+    torch.cuda.empty_cache()
+
     if not config.get('save_model') or config['save_model']:
         torch.save(model, f'pruned_models/{config["model_name"]}-{config["sparsity"]}-finetuned.pt')
 
