@@ -10,6 +10,10 @@ Bs is inverse of how often to make masks (e.g. when Bs is 4, make new masks with
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def prop_zeros(tens):
+    return torch.sum(tens == 0) / torch.numel(tens)
+
+# calculate new mask of previously masked model
 def calculate_mask(
     W,
     H_inv,
@@ -25,6 +29,18 @@ def calculate_mask(
 
     M = torch.zeros(d_row, d_col, dtype=torch.bool).to(device=device)
     E = torch.zeros(d_row, B, dtype=torch.float64).to(device=device)
+
+    # previous mask, check where weights are 0 (don't want to update/select these weights)
+    prev_mask = (W != 0)
+    # add up tot number of weights already masked
+    # prev_num_masked = torch.sum(~prev_mask)
+    # print(f"num weights masked: {prev_num_masked}")
+    # print(f"total weights: {W.numel}")
+    # update proportion to prune, accounting for not pruning masked weights
+    # print(f"original p: {p}")
+    # p = 1 - (1-p) * (torch.numel(W) - prev_num_masked)/torch.numel(W)
+    # print(f"new p: {p}")
+
     # only need to calculate w_square and h_square once
     # Loop over blocks of columns of W (as specified by B)
 
@@ -42,8 +58,13 @@ def calculate_mask(
                 w_square_section = torch.square(W[:, j:j + Bs])
                 h_square_section = torch.square(H_inv[j:j + Bs, j:j + Bs]).diag() # 1 dimensional vector
 
+                prev_mask_section = prev_mask[:, j:j + Bs]
+
                 # getting the prune values matrix from W and H^-1 sections
                 prune_values = w_square_section / h_square_section.unsqueeze(0)
+
+                # set prune_values of already-pruned weights to 0 (to select them)
+                prune_values = prune_values * prev_mask_section
 
                 num_el_prune = int(p * prune_values.numel())
 
@@ -53,20 +74,22 @@ def calculate_mask(
                 mask = prune_values > cutoff_value
 
                 #masking
-                M[:, j:j + Bs] = mask
+                M[:, j:j + Bs] = mask * prev_mask_section
 
             # Calculate the pruning error for this column
             E[:, j - i] = W[:, j] / H_inv[j, j]
 
             # Freeze the weights that are not pruned by multiplying by the pruning mask
-            # Invert mask (~M equivalent to 1 - M < might be -(M + 1))
             E[:, j - i] = (~M[:, j]) * E[:, j - i]
 
-            # also testing no weight update here too
+            # Also freeze previously masked weights
+            # E[:, j - i] = prev_mask[: j] * E[:, j - i]
+
             W[:, j:i + B] -= torch.ger(E[:, j - i], H_inv[j, j:i + B])
             
         # Update all remaining weights
         W[:, i + B:] -= torch.matmul(E, H_inv[i:i + B, i + B:])
 
+    # print(f"Proportion of Mask 0s: {prop_zeros(M)}")
     # return mask
     return M

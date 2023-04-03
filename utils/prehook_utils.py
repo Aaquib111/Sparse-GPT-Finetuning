@@ -1,5 +1,7 @@
 import torch
-from inverse_hessian import calc_hessian
+from utils.hessian_utils import calc_hessian
+from collections import OrderedDict
+from typing import Dict, Callable
 
 # Generate forward pre hooks to record the input into features dict
 # Features is a dictionary for module inputs
@@ -23,15 +25,6 @@ def get_feature_storage_name(param_name):
     return param_name
 
 
-# Function to check if param should be added to features dictionary
-def check_whitelist(param_name, whitelist):
-    for name_end in whitelist:
-        if name_end in param_name:
-            return True
-
-    return False
-
-
 opt_whitelist = ['self_attn.k_proj',
 'decoder.project_out',
 'decoder.project_in',
@@ -42,13 +35,24 @@ opt_whitelist = ['self_attn.k_proj',
 'fc2']
 
 
+
+# Function to check if param should be added to features dictionary
+def check_whitelist(param_name, whitelist=opt_whitelist):
+    for name_end in whitelist:
+        if name_end in param_name:
+            return True
+
+    return False
+
+
 def put_input_hooks(model, features, feature_storage_device, verbose=False, whitelist=opt_whitelist):#, storage_dir, offload_freq=16
 
     # Function to make a hook function that inserts input hessian into features dictionary
     def get_features(name):
 
         # pre_hook function that is input into nn.module.register_forward_pre_hook
-        def pre_hook(model, input):
+        def pre_hook(model, input, output):
+            # print("forward hook called")
             if verbose:
                 try:
                     print(f"for input {name}, shape is {input[0].shape}")
@@ -63,17 +67,17 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
                 #print(storage_name)
                 # check if flattened
                 if len(input[0].shape) == 2:
-                    input_hessian = calc_hessian(torch.transpose(input[0], 0, 1), flattened=True).to(device=feature_storage_device)
+                    input_hessian = calc_hessian(torch.transpose(input[0], 0, 1), flattened=True).cpu()
                 # not flattened
                 else:
-                    input_hessian = calc_hessian(torch.transpose(input[0], 1, 2), flattened=False).to(device=feature_storage_device)
-
+                    input_hessian = calc_hessian(torch.transpose(input[0], 1, 2), flattened=False).cpu()
+                
                 if storage_name in features:
                     features[storage_name] += input_hessian
                 # make new entry if not existing
                 else:
                     features[storage_name] = input_hessian
-                    
+                del input_hessian
                 torch.cuda.empty_cache()
                 '''if features[storage_name].shape[0] % offload_freq == 0:
                     if os.path.exists(f'{storage_dir}/{name}'):
@@ -89,9 +93,57 @@ def put_input_hooks(model, features, feature_storage_device, verbose=False, whit
         # return the pre_hook function that will be fed into register_forward_pre_hook
         return pre_hook
     
+    all_hooks = []
     # call get_features, put in hooks at every module
     for n, m in model.named_modules():
-        new_hook = get_features(n)
-        # print(m)
-        m.register_forward_pre_hook(new_hook)
+        if check_whitelist(n, whitelist=whitelist):
+            hook_func = get_features(n)
+            # print(m)
+            all_hooks.append(m.register_forward_hook(hook_func))
 
+    return all_hooks
+
+
+
+# Put backwards hooks to keep backpropagation masked, don't update pruned weights
+# Operates on models with prune.remove() already done
+def put_backward_hooks(model, whitelist=opt_whitelist):#, storage_dir, offload_freq=16
+
+    masks = {}
+    # Iterate through layers, calculate mask 
+    for n, p in model.named_parameters():
+        if check_whitelist(n, whitelist=whitelist) and "weight" in n:
+            masks[n] = (p != 0)
+
+    # Function to make a hook function that masks the gradient of a parameter
+    def mask_grad(name, masks):
+
+        # pre_hook function that is input into nn.module.register_forward_pre_hook
+        def back_hook(grad):
+            # print("backward hook called")
+            return grad * masks[name].float()
+
+        # return the pre_hook function that will be fed into register_forward_pre_hook
+        return back_hook
+    
+    all_hooks = []
+    # call get_features, put in hooks at every module
+    for n, p in model.named_parameters():
+        if check_whitelist(n, whitelist=whitelist) and "weight" in n:
+            hook_func = mask_grad(n, masks)
+            # print(m)
+            new_hook = p.register_hook(hook_func)
+            all_hooks.append(new_hook)
+
+    return all_hooks
+
+def remove_all_hooks(model: torch.nn.Module) -> None:
+    for name, child in model._modules.items():
+        if child is not None:
+            if hasattr(child, "_forward_hooks"):
+                child._forward_hooks: Dict[int, Callable] = OrderedDict()
+            elif hasattr(child, "_forward_pre_hooks"):
+                child._forward_pre_hooks: Dict[int, Callable] = OrderedDict()
+            elif hasattr(child, "_backward_hooks"):
+                child._backward_hooks: Dict[int, Callable] = OrderedDict()
+            remove_all_hooks(child)

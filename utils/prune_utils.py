@@ -1,11 +1,10 @@
-from input_prehooks import get_feature_storage_name
+from utils.prehook_utils import get_feature_storage_name
 import gc
 import torch
 from tqdm import tqdm
 from torch.nn.utils import prune
-from inverse_hessian import calc_inverse_hessian
-import calculate_mask
-import iterative_calculate_mask
+from utils.hessian_utils import calc_inverse_hessian
+from utils.mask_utils import calculate_mask
 
 opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
 
@@ -24,8 +23,8 @@ def get_module_name(param_name):
         return None, None
 
 
-def sparsegpt_prune(model, feature_hessians, 
-EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist, iterative=True):
+def sparsegpt_prune(model, model_name, feature_hessians, EPSILON, 
+                    SPARSENESS, B, Bs, module_blacklist=opt_blacklist, save_model=True):
     module_dict = {}
     for n, m in model.named_modules():
         module_dict[n] = m
@@ -63,21 +62,57 @@ EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist, iterative=True):
 
             # calculate inverse hessian
             # check if input is flattened e.g. from 8,512,768 to 4096,768
-            inv_hess = calc_inverse_hessian(layer_hessian, epsilon=EPSILON)
+            try:
+                inv_hess = calc_inverse_hessian(layer_hessian)
+            except:
+                print(f'Cant prune {param_name}')
+                continue
 
             # calculate mask
-            if iterative:
-                mask = iterative_calculate_mask.calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
-            else:
-                mask = calculate_mask.calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
-
+            mask = calculate_mask(W=param, H_inv=inv_hess, p=SPARSENESS, B=B, Bs=Bs)
+            
             # get module from lookup dictionary by module name
             module = module_dict[module_name]
             # apply mask
             prune.custom_from_mask(module=module, name=param_type, mask=mask)
             prune.remove(module=module, name=param_type)
             gc.collect()
-            torch.cuda.empty_cache()           
-    pruned_model_name = f'opt-350m-test-{SPARSENESS}'
+            torch.cuda.empty_cache()  
 
-    torch.save(model.state_dict(), f'pruned_models/{pruned_model_name}.pt')
+    pruned_model_name = f'{model_name}-{SPARSENESS}'
+    if save_model:
+        torch.save(model.state_dict(), f'pruned_models/{pruned_model_name}.pt')
+    
+# mask the lowest magnitude weights of the whole model
+def mask_lowest(model, amount=.2, module_blacklist=opt_blacklist, prune_remove=True):
+    module_dict = {}
+    for n, m in model.named_modules():
+        module_dict[n] = m
+    # print(module_dict.keys())
+    
+    parameter_list = []
+    param_dict = {}
+    for n, m in model.named_parameters():
+        parameter_list.append(n)
+        param_dict[n] = m
+    # print(parameter_list)
+
+    for n in parameter_list:
+        module_name, param_type = get_module_name(n)
+
+        # skip bias, embed, etc parameters
+        if module_name in module_blacklist or module_name is None \
+            or param_type is None or param_type!="weight":
+            continue
+
+        if len(param_dict[n].shape) < 2:
+            continue
+
+        # perform the masking
+        module = module_dict[module_name]
+        # param_type should always be 'weight'
+        prune.l1_unstructured(module=module, name=param_type, amount=amount)
+
+        # remove mask, apply mask and make some weights 0
+        if prune_remove:
+            prune.remove(module=module, name=param_type)
