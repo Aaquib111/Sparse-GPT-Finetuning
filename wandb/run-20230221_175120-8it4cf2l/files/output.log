@@ -1,0 +1,117 @@
+
+Found cached dataset wikitext (/gs/gsfs0/users/asyed/.cache/huggingface/datasets/wikitext/wikitext-2-raw-v1/1.0.0/a241db52902eaf2c6aa732210bead40c090019a499ceb13bcbfa3f8ab646a126)
+100%|██████████| 388/388 [00:00<00:00, 14220.71it/s]
+  0%|          | 0/141 [00:00<?, ?it/s]/gs/gsfs0/users/asyed/.local/lib/python3.9/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:28<00:00,  4.91it/s]
+100%|██████████| 388/388 [00:00<00:00, 15002.86it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:28<00:00,  4.89it/s]
+100%|██████████| 388/388 [00:00<00:00, 14852.24it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:28<00:00,  4.87it/s]
+100%|██████████| 388/388 [00:00<00:00, 57998.86it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:28<00:00,  4.84it/s]
+100%|██████████| 388/388 [00:00<00:00, 59894.37it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:29<00:00,  4.83it/s]
+100%|██████████| 388/388 [00:00<00:00, 60084.55it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:29<00:00,  4.82it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 99%|█████████▉| 140/141 [00:28<00:00,  4.94it/s]

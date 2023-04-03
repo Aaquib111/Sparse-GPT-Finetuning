@@ -7,7 +7,7 @@ from inverse_hessian import calc_inverse_hessian
 import calculate_mask
 import iterative_calculate_mask
 
-opt_blacklist = ['module.model.decoder.embed_tokens', 'module.model.decoder.embed_positions']
+opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
 
 #DEVICE
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -24,7 +24,7 @@ def get_module_name(param_name):
         return None, None
 
 
-def sparsegpt_prune(model, model_name, feature_hessians, 
+def sparsegpt_prune(model, feature_hessians, 
 EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist, iterative=True):
     module_dict = {}
     for n, m in model.named_modules():
@@ -77,8 +77,7 @@ EPSILON, SPARSENESS, B, Bs, module_blacklist=opt_blacklist, iterative=True):
             prune.custom_from_mask(module=module, name=param_type, mask=mask)
             prune.remove(module=module, name=param_type)
             gc.collect()
-            torch.cuda.empty_cache()  
-
-    pruned_model_name = f'{model_name}-{SPARSENESS}'
+            torch.cuda.empty_cache()           
+    pruned_model_name = f'opt-350m-test-{SPARSENESS}'
 
     torch.save(model.state_dict(), f'pruned_models/{pruned_model_name}.pt')

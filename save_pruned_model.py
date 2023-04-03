@@ -26,15 +26,15 @@ def load_unmasked_model(existing_model, state_dict_path):
     existing_model.load_state_dict(torch.load(state_dict_path))
 
 # prune 0s to a mask, to make training easier (ostensibly)
-class ZeroPruning(prune.BasePruningMethod):
+class ThresholdPruning(prune.BasePruningMethod):
     PRUNING_TYPE = "unstructured"
 
     # default threshold is 0, prunes weights that are already 0 (for training)
-    def __init__(self):
-        pass
+    def __init__(self, threshold=0):
+        self.threshold = threshold
 
     def compute_mask(self, tensor, default_mask):
-        return torch.abs(tensor) != 0
+        return torch.abs(tensor) >= self.threshold
 
 # apply pytorch mask in place of 0 weights to make backpropagation easier for training
 default_opt_blacklist = ['model.decoder.embed_tokens', 'model.decoder.embed_positions']
@@ -62,8 +62,8 @@ def mask_from_pruned(model, module_blacklist=default_opt_blacklist):
         if len(param_dict[n].shape) < 2:
             continue
 
-        ZeroPruning.apply(module=module_dict[module_name], name=param_type)
-        
+        ThresholdPruning.apply(module=module_dict[module_name], name=param_type)
+
 # load model with masks
 def load_masked_model(existing_model, state_dict_path):
 
@@ -72,35 +72,10 @@ def load_masked_model(existing_model, state_dict_path):
     
     # then reapply the (previously removed) masks
     mask_from_pruned(model=existing_model)
-    
-# unmask model with 0s in place
-def unmask_model(model, module_blacklist=default_opt_blacklist):
-    module_dict = {}
-    for n, m in model.named_modules():
-        module_dict[n] = m
-    # print(module_dict.keys())
-    
-    parameter_list = []
-    param_dict = {}
-    for n, m in model.named_parameters():
-        parameter_list.append(n)
-        param_dict[n] = m
-    # print(parameter_list)
 
-    for n in parameter_list:
-        module_name, param_type = get_module_name(n)
-
-        # skip bias, embed, etc parameters
-        if module_name in module_blacklist or module_name is None \
-            or param_type is None or param_type!="weight":
-            continue
-
-        if len(param_dict[n].shape) < 2:
-            continue
-            
-        prune.remove(module=module_dict[module_name], name=param_type)
-        torch.cuda.clear_cache()
-
+    # prune.global_unstructured(
+    #     existing_model.parameters(), pruning_method=ThresholdPruning, threshold=0
+    # )
 
 
 '''
