@@ -1,4 +1,4 @@
-# Authors: 
+# Authors
 - Aaquib Syed | [asyed04@umd.edu](mailto:asyed04@terpmail.umd.edu)
 - Phillip Huang Guo | [phguo@umd.edu](mailto:phguo@terpmail.umd.edu)
 - Vijaykaarti Sundarapandiyan | [vsundar1@umd.edu](mailto:vsundar1@terpmail.umd.edu)
