@@ -1,3 +1,8 @@
+# Authors: 
+Aaquib Syed | [asyed04@umd.edu](mailto:asyed04@terpmail.umd.edu)
+Phillip Huang Guo | [phguo@umd.edu](mailto:phguo@terpmail.umd.edu)
+Vijaykaarti Sundarapandiyan | [vsundar1@umd.edu](mailto:vsundar1@terpmail.umd.edu)
+
 # Sparse-GPT-Finetuning
 
 Massive language models with billions of parameters have significant compute expenses and thus can benefit from pruning. 
@@ -60,3 +65,6 @@ every other technique beyond 0.4 sparseness on OPT-125M and 0.6 sparseness on OP
 find that SparseGPT non-iterative pruning and fine-tuning is moderately successful compared to
 no fine-tuning in all cases, but is beaten out significantly by both iterative pruning and fine-tuning
 methods beyond 0.5 sparseness.
+
+# Raw Data
+We provide the raw data as .pickle files for researchers who wish to incorporate our results:
